@@ -117,11 +117,18 @@ contact = Contact.new(name: "Darrin")
 contact.set_typed_field_value("age", 40)
 contact.set_typed_field_value("status", "active")
 
-# Bulk assignment (form-friendly)
+# Bulk assignment by field NAME (ergonomic for scripting / seeds)
 contact.typed_fields_attributes = [
   { name: "age", value: 40 },
   { name: "status", value: "active" },
   { name: "tags", value: ["vip", "partner"] },
+]
+
+# Bulk assignment by field ID (standard Rails form contract).
+# Your form templates emit this shape when you use fields_for :typed_values.
+contact.typed_values_attributes = [
+  { id: 12, field_id: 4, value: "40" },
+  { field_id: 7, value: "active" },
 ]
 
 contact.save!

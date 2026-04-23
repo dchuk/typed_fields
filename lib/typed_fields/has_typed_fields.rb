@@ -172,14 +172,36 @@ module TypedFields
         typed_values
       end
 
-      # Bulk assign values by field name.
+      # Bulk assign values by field NAME. Coexists with (rather than replaces)
+      # the `accepts_nested_attributes_for :typed_values` setter declared above,
+      # which accepts entries keyed by field ID.
       #
-      #   record.typed_fields_attributes = [
-      #     { name: "age", value: 30 },
-      #     { name: "email", value: "test@example.com" },
-      #     { name: "old_field", _destroy: true }
-      #   ]
+      # Why both exist:
       #
+      #   * The nested-attributes setter (`typed_values_attributes=`) is the
+      #     standard Rails form contract. HTML form builders emit `field_id`
+      #     as a hidden input per value row, so when a form posts back, the
+      #     params look like:
+      #       { typed_values_attributes: [
+      #           { id: 12, field_id: 4, value: "40" }, ...
+      #       ] }
+      #     `accepts_nested_attributes_for` matches existing values by `id`.
+      #
+      #   * This setter (`typed_fields_attributes=` / `typed_fields=`) takes
+      #     entries keyed by field *name* and translates them to field IDs
+      #     before handing off to the nested-attributes setter. It also
+      #     enforces the `types:` restriction declared on `has_typed_fields`
+      #     (rejecting entries for disallowed field types) and supports
+      #     `_destroy: true` for removing a value by name. This is the
+      #     ergonomic path for console/seed code:
+      #       record.typed_fields_attributes = [
+      #         { name: "age",       value: 30 },
+      #         { name: "email",     value: "test@example.com" },
+      #         { name: "old_field", _destroy: true },
+      #       ]
+      #
+      # Pick the one that fits: forms -> typed_values_attributes=, scripting
+      # -> typed_fields_attributes=. They can't both run in the same save.
       def typed_fields_attributes=(attributes)
         attributes = attributes.to_h if attributes.respond_to?(:permitted?)
         attributes = attributes.values if attributes.is_a?(Hash)
