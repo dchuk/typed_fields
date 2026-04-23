@@ -39,7 +39,7 @@ module TypedFields
       def add_routes
         route <<~ROUTES
           resources :typed_fields do
-            resources :field_options, controller: "typed_fields", action: :options, only: [] do
+            resources :field_options, controller: "typed_fields", only: [] do
               collection do
                 post :add_option
                 delete :remove_option
