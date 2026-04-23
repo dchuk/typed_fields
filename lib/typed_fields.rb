@@ -13,12 +13,12 @@ module TypedFields
 
   class << self
     def config
-      yield Config.instance if block_given?
-      Config.instance
+      yield Config if block_given?
+      Config
     end
 
     alias_method :configure, :config
 
-    def registry = Registry.instance
+    def registry = Registry
   end
 end

@@ -1,11 +1,22 @@
 # frozen_string_literal: true
 
+require "active_support/configurable"
+
 module TypedFields
+  # Gem-level configuration for field type registration.
+  #
+  #   TypedFields.configure do |c|
+  #     c.register_field_type :phone, "MyApp::Fields::Phone"
+  #   end
+  #
+  # Accessible from anywhere via `TypedFields.config` (which returns this
+  # class; class-level `field_types` / `register_field_type` / `field_class_for`
+  # / `type_names` methods are defined below).
   class Config
-    include Singleton
+    include ActiveSupport::Configurable
 
     # Map of type names to their STI class names.
-    # Add custom types here via TypedFields.configure.
+    # Add custom types via TypedFields.configure.
     BUILTIN_FIELD_TYPES = {
       text:          "TypedFields::Field::Text",
       long_text:     "TypedFields::Field::LongText",
@@ -26,31 +37,32 @@ module TypedFields
       json:          "TypedFields::Field::Json",
     }.freeze
 
-    attr_accessor :field_types
+    # Mutable registry of type_name => class_name pairs. Seeded from
+    # BUILTIN_FIELD_TYPES on first access; extended via register_field_type.
+    config_accessor(:field_types) { BUILTIN_FIELD_TYPES.dup }
 
-    def initialize
-      @field_types = BUILTIN_FIELD_TYPES.dup
-    end
+    class << self
+      # Register a custom field type.
+      def register_field_type(name, class_name)
+        field_types[name.to_sym] = class_name
+      end
 
-    # Register a custom field type
-    #
-    #   TypedFields.configure do |c|
-    #     c.register_field_type :phone, "MyApp::Fields::Phone"
-    #   end
-    def register_field_type(name, class_name)
-      @field_types[name.to_sym] = class_name
-    end
+      # Resolve a type name to its STI class.
+      def field_class_for(type_name)
+        class_name = field_types[type_name.to_sym]
+        raise ArgumentError, "Unknown field type: #{type_name}" unless class_name
+        class_name.constantize
+      end
 
-    # Resolve type name to class
-    def field_class_for(type_name)
-      class_name = @field_types[type_name.to_sym]
-      raise ArgumentError, "Unknown field type: #{type_name}" unless class_name
-      class_name.constantize
-    end
+      # All registered type names.
+      def type_names
+        field_types.keys
+      end
 
-    # All registered type names
-    def type_names
-      @field_types.keys
+      # Restore defaults (test isolation).
+      def reset!
+        self.field_types = BUILTIN_FIELD_TYPES.dup
+      end
     end
   end
 end

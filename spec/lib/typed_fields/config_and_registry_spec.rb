@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe TypedFields::Config do
-  let(:config) { described_class.instance }
+  let(:config) { described_class }
 
   describe "#field_types" do
     it "includes all builtin types" do
@@ -49,7 +49,7 @@ RSpec.describe TypedFields::Config do
 end
 
 RSpec.describe TypedFields::Registry do
-  let(:registry) { described_class.instance }
+  let(:registry) { described_class }
 
   before { registry.reset! }
 
