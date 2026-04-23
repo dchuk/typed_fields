@@ -27,15 +27,6 @@ module TypedFields
         directory "javascript/controllers", "app/javascript/controllers"
       end
 
-      def inject_concern
-        inject_into_class "app/controllers/application_controller.rb", "ApplicationController" do
-          optimize_indentation(<<~CODE, 2)
-            include TypedFieldsControllerConcern
-            helper TypedFieldsHelper
-          CODE
-        end
-      end
-
       def add_routes
         route <<~ROUTES
           resources :typed_fields do
@@ -53,13 +44,27 @@ module TypedFields
         say ""
         say "Scaffold generated. You can now manage fields at /typed_fields", :green
         say ""
-        say "To render typed field inputs in your entity forms, add:", :yellow
+        say "Next steps:", :yellow
         say ""
-        say '  <%= render_typed_value_inputs(form: f, record: @record) %>'
+        say "  1. Include the concern in controllers that use typed-field",
+           :yellow
+        say "     search params (your host model's controller, usually):",
+           :yellow
         say ""
-        say "To filter entities by typed fields:", :yellow
+        say "       class ProductsController < ApplicationController"
+        say "         include TypedFieldsControllerConcern"
+        say "         helper TypedFieldsHelper"
+        say "         ..."
+        say "       end"
         say ""
-        say '  <%= render_typed_fields_search(fields: Model.typed_field_definitions, url: search_path) %>'
+        say "  2. Render typed field inputs in your entity forms:", :yellow
+        say ""
+        say '       <%= render_typed_value_inputs(form: f, record: @record) %>'
+        say ""
+        say "  3. Add a search form to filter entities by typed fields:",
+           :yellow
+        say ""
+        say '       <%= render_typed_fields_search(fields: Model.typed_field_definitions, url: search_path) %>'
         say ""
       end
     end
