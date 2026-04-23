@@ -1,0 +1,9 @@
+<div>
+  <%= form.label :value, field.name %>
+  <%= render_array_field(
+        form: form,
+        name: :value,
+        value: typed_value.value,
+        field_method: :date_field,
+        field_opts: {}) %>
+</div>

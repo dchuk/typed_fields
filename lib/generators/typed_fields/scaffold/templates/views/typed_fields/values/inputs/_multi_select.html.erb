@@ -1,0 +1,7 @@
+<div>
+  <%= form.label :value, field.name %>
+  <%= form.select :value,
+        field.field_options.sorted.map { |o| [o.label, o.value] },
+        { selected: Array(typed_value.value) },
+        { multiple: true, required: field.required? } %>
+</div>

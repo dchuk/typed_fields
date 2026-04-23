@@ -1,0 +1,7 @@
+<div>
+  <%= form.label :value, field.name %>
+  <%= form.text_area :value, value: typed_value.value,
+        maxlength: field.try(:max_length),
+        required: field.required?,
+        rows: 4 %>
+</div>

@@ -1,0 +1,16 @@
+<%= form_with(model: field, scope: :typed_field,
+      url: field.persisted? ? typed_field_path(field) : typed_fields_path) do |f| %>
+  <%= render "typed_fields/forms/common_fields", f: f, field: field %>
+
+  <div>
+    <%= f.label :min_size, "Min Items" %>
+    <%= f.number_field :min_size, min: 0, value: field.min_size %>
+  </div>
+
+  <div>
+    <%= f.label :max_size, "Max Items" %>
+    <%= f.number_field :max_size, min: 1, value: field.max_size %>
+  </div>
+
+  <div><%= f.submit field.persisted? ? "Update" : "Create" %></div>
+<% end %>

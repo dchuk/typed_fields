@@ -1,0 +1,6 @@
+<div>
+  <%= form.label :value, field.name %>
+  <%= form.date_field :value, value: typed_value.value,
+        min: field.try(:min_date), max: field.try(:max_date),
+        required: field.required? %>
+</div>

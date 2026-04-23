@@ -1,0 +1,7 @@
+<div>
+  <%= form.label :value, field.name %>
+  <%= form.select :value,
+        field.field_options.sorted.map { |o| [o.label, o.value] },
+        { include_blank: !field.required?, selected: typed_value.value },
+        { required: field.required? } %>
+</div>

@@ -1,0 +1,9 @@
+<div>
+  <%= form.label :value, field.name %>
+  <%= render_array_field(
+        form: form,
+        name: :value,
+        value: typed_value.value,
+        field_method: :number_field,
+        field_opts: { min: field.try(:min), max: field.try(:max) }) %>
+</div>

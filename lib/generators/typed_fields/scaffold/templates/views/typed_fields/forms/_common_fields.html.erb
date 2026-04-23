@@ -1,0 +1,54 @@
+<%# Shared common fields for all field definition forms.
+    Rendered inside a form_with block via:
+      render "typed_fields/forms/common_fields", f: f, field: field %>
+
+<% if field.errors.any? %>
+  <div style="color: red; margin-bottom: 1rem;">
+    <h3><%= pluralize(field.errors.count, "error") %>:</h3>
+    <ul>
+      <% field.errors.each do |error| %>
+        <li><%= error.full_message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<% if field.new_record? %>
+  <input type="hidden" name="type" value="<%= field.field_type_name %>" />
+<% end %>
+
+<div>
+  <label>Field Type</label>
+  <input type="text" value="<%= field.field_type_name.humanize %>" disabled readonly />
+</div>
+
+<div>
+  <%= f.label :entity_type %>
+  <% if field.persisted? %>
+    <%= f.text_field :entity_type, disabled: true %>
+  <% else %>
+    <%= f.select :entity_type, TypedFields.registry.entity_types, { prompt: "Select entity..." } %>
+  <% end %>
+</div>
+
+<div>
+  <%= f.label :name %>
+  <%= f.text_field :name, required: true %>
+</div>
+
+<% unless field.persisted? %>
+  <div>
+    <%= f.label :scope, "Scope (optional)" %>
+    <%= f.text_field :scope, placeholder: "Leave blank for global" %>
+  </div>
+<% end %>
+
+<div>
+  <%= f.label :required %>
+  <%= f.check_box :required %>
+</div>
+
+<div>
+  <%= f.label :sort_order %>
+  <%= f.number_field :sort_order, min: 0 %>
+</div>

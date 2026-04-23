@@ -1,0 +1,6 @@
+<div>
+  <%= form.label :value, field.name %>
+  <%= form.text_field :value, value: typed_value.value,
+        maxlength: field.try(:max_length),
+        required: field.required? %>
+</div>

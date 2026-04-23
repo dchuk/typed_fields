@@ -1,0 +1,10 @@
+<div>
+  <%= form.label :value, field.name %>
+  <% if field.required? %>
+    <%= form.check_box :value, { checked: typed_value.value }, "true", "false" %>
+  <% else %>
+    <%= form.select :value,
+          [["", ""], ["Yes", "true"], ["No", "false"]],
+          { selected: typed_value.value.nil? ? "" : typed_value.value.to_s } %>
+  <% end %>
+</div>
