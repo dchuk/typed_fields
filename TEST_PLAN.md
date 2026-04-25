@@ -1,20 +1,20 @@
-# TypedFields Comprehensive Test Plan
+# TypedEAV Comprehensive Test Plan
 
 Generated: 2026-04-08
 
 ## Overview
 
-This plan covers the full TypedFields gem with conventional Rails/RSpec tests. It is organized by spec file, with each section listing every test case needed. Tests follow Rails conventions: model specs for validations/associations/methods, lib specs for pure logic, and integration specs for cross-cutting behavior.
+This plan covers the full TypedEAV gem with conventional Rails/RSpec tests. It is organized by spec file, with each section listing every test case needed. Tests follow Rails conventions: model specs for validations/associations/methods, lib specs for pure logic, and integration specs for cross-cutting behavior.
 
 ### Current State
 
 **Existing spec files (6):**
-- `spec/models/typed_fields/field_spec.rb` — 25 examples
-- `spec/models/typed_fields/value_spec.rb` — 22 examples
-- `spec/models/typed_fields/has_typed_fields_spec.rb` — 18 examples
-- `spec/models/typed_fields/section_and_option_spec.rb` — 8 examples
-- `spec/lib/typed_fields/query_builder_spec.rb` — 18 examples
-- `spec/lib/typed_fields/config_and_registry_spec.rb` — 8 examples
+- `spec/models/typed_eav/field_spec.rb` — 25 examples
+- `spec/models/typed_eav/value_spec.rb` — 22 examples
+- `spec/models/typed_eav/has_typed_eav_spec.rb` — 18 examples
+- `spec/models/typed_eav/section_and_option_spec.rb` — 8 examples
+- `spec/lib/typed_eav/query_builder_spec.rb` — 18 examples
+- `spec/lib/typed_eav/config_and_registry_spec.rb` — 8 examples
 
 **Missing factories (5):** DecimalArray, DateArray, Url, Color, Json
 
@@ -24,16 +24,16 @@ This plan covers the full TypedFields gem with conventional Rails/RSpec tests. I
 
 ## Phase 1: Factories & Test Infrastructure
 
-### File: `spec/factories/typed_fields.rb`
+### File: `spec/factories/typed_eav.rb`
 
 Add missing factories:
 
 ```
-Factory: :decimal_array_field (TypedFields::Field::DecimalArray)
-Factory: :date_array_field (TypedFields::Field::DateArray)
-Factory: :url_field (TypedFields::Field::Url)
-Factory: :color_field (TypedFields::Field::Color)
-Factory: :json_field (TypedFields::Field::Json)
+Factory: :decimal_array_field (TypedEAV::Field::DecimalArray)
+Factory: :date_array_field (TypedEAV::Field::DateArray)
+Factory: :url_field (TypedEAV::Field::Url)
+Factory: :color_field (TypedEAV::Field::Color)
+Factory: :json_field (TypedEAV::Field::Json)
 ```
 
 ### File: `Gemfile`
@@ -51,7 +51,7 @@ Add shoulda-matchers configuration block.
 
 ## Phase 2: Model Specs
 
-### File: `spec/models/typed_fields/field_spec.rb`
+### File: `spec/models/typed_eav/field_spec.rb`
 
 #### Existing (keep as-is):
 - [x] associations: has_many(:values), has_many(:field_options), belongs_to(:section).optional
@@ -100,9 +100,9 @@ describe "#default_value and #default_value="
 ```
 describe "#field_type_name"
   it "returns underscore name for each type"
-    expect(TypedFields::Field::MultiSelect.new.field_type_name).to eq("multi_select")
-    expect(TypedFields::Field::IntegerArray.new.field_type_name).to eq("integer_array")
-    expect(TypedFields::Field::LongText.new.field_type_name).to eq("long_text")
+    expect(TypedEAV::Field::MultiSelect.new.field_type_name).to eq("multi_select")
+    expect(TypedEAV::Field::IntegerArray.new.field_type_name).to eq("integer_array")
+    expect(TypedEAV::Field::LongText.new.field_type_name).to eq("long_text")
 ```
 
 #### NEW — allowed_option_values caching:
@@ -128,7 +128,7 @@ describe "#allowed_option_values"
 
 #### NEW — Text field validations:
 ```
-describe TypedFields::Field::Text do
+describe TypedEAV::Field::Text do
   describe "option validations"
     it "validates min_length is non-negative integer"
     it "validates max_length is positive integer"
@@ -144,11 +144,11 @@ describe TypedFields::Field::Text do
 
 #### NEW — Integer/Decimal field validations:
 ```
-describe TypedFields::Field::Integer do
+describe TypedEAV::Field::Integer do
   it "validates max >= min"
     build(:integer_field, options: { min: 100, max: 10 }) => not valid
 
-describe TypedFields::Field::Decimal do
+describe TypedEAV::Field::Decimal do
   it "validates max >= min"
   it "applies precision_scale rounding"
     field = build(:decimal_field, options: { precision_scale: "2" })
@@ -160,14 +160,14 @@ describe TypedFields::Field::Decimal do
 
 #### NEW — Untested field type casting:
 ```
-describe TypedFields::Field::LongText do
+describe TypedEAV::Field::LongText do
   it "casts to string via to_s"
     expect(field.cast_value(123)).to eq("123")
   it "returns nil for nil"
     expect(field.cast_value(nil)).to be_nil
   it "maps to :text_value column"
 
-describe TypedFields::Field::DateTime do
+describe TypedEAV::Field::DateTime do
   it "casts valid datetime string"
     expect(field.cast_value("2025-06-15 14:30:00")).to be_a(Time)
   it "passes through Time objects"
@@ -177,7 +177,7 @@ describe TypedFields::Field::DateTime do
     field.cast_value("hello")
     expect(field.last_cast_invalid).to be false  # documents the bug
 
-describe TypedFields::Field::DecimalArray do
+describe TypedEAV::Field::DecimalArray do
   it "casts array elements to BigDecimal"
     expect(field.cast_value(["1.5", "2.5"])).to eq([BigDecimal("1.5"), BigDecimal("2.5")])
   it "filters out non-numeric elements and marks invalid"
@@ -187,13 +187,13 @@ describe TypedFields::Field::DecimalArray do
   it "returns nil for nil"
   it "returns nil for empty array (via .presence)"
 
-describe TypedFields::Field::DateArray do
+describe TypedEAV::Field::DateArray do
   it "casts array of date strings"
     expect(field.cast_value(["2025-01-01", "2025-06-15"])).to eq([Date.new(2025,1,1), Date.new(2025,6,15)])
   it "filters out invalid dates and marks invalid"
   it "returns nil for nil"
 
-describe TypedFields::Field::Url do
+describe TypedEAV::Field::Url do
   it "strips whitespace"
     expect(field.cast_value("  https://example.com  ")).to eq("https://example.com")
   it "does not downcase (URLs are case-sensitive in path)"
@@ -201,14 +201,14 @@ describe TypedFields::Field::Url do
     expect(field.url_format_valid?("https://example.com")).to be true
     expect(field.url_format_valid?("not-a-url")).to be false
 
-describe TypedFields::Field::Color do
+describe TypedEAV::Field::Color do
   it "downcases and strips"
     expect(field.cast_value("  #FF0000  ")).to eq("#ff0000")
   it "returns nil for nil"
   it "maps to :string_value column"
   it "supports only :eq, :not_eq, :is_null, :is_not_null operators"
 
-describe TypedFields::Field::Json do
+describe TypedEAV::Field::Json do
   it "passes through hash values"
     expect(field.cast_value({ "key" => "val" })).to eq({ "key" => "val" })
   it "passes through array values"
@@ -219,7 +219,7 @@ describe TypedFields::Field::Json do
 
 #### NEW — Boolean casting regression test (P0 bug):
 ```
-describe TypedFields::Field::Boolean do
+describe TypedEAV::Field::Boolean do
   it "REGRESSION: casts arbitrary strings to truthy (known bug)"
     expect(field.cast_value("banana")).to eq(true)  # documents the bug
   it "does not call mark_cast_invalid! for garbage input (known limitation)"
@@ -256,19 +256,19 @@ describe "supported operators for all field types"
 
 #### NEW — ColumnMapping:
 ```
-describe TypedFields::ColumnMapping do
+describe TypedEAV::ColumnMapping do
   it "raises NotImplementedError for field type without value_column"
-    klass = Class.new(TypedFields::Field::Base)
+    klass = Class.new(TypedEAV::Field::Base)
     expect { klass.value_column }.to raise_error(NotImplementedError)
 
   it "returns default operators based on column type"
-    expect(TypedFields::Field::Integer.supported_operators).to include(:between)
-    expect(TypedFields::Field::Boolean.supported_operators).not_to include(:gt)
+    expect(TypedEAV::Field::Integer.supported_operators).to include(:between)
+    expect(TypedEAV::Field::Boolean.supported_operators).not_to include(:gt)
 ```
 
 ---
 
-### File: `spec/models/typed_fields/value_spec.rb`
+### File: `spec/models/typed_eav/value_spec.rb`
 
 #### Existing (keep as-is):
 - [x] associations: belongs_to entity, belongs_to field
@@ -315,14 +315,14 @@ context "with a json field"
 describe "cast invalid detection"
   it "adds :invalid error when field marks cast as invalid"
     field = create(:integer_field, required: true)
-    value = TypedFields::Value.new(entity: create(:contact), field: field)
+    value = TypedEAV::Value.new(entity: create(:contact), field: field)
     value.value = "not_a_number"
     expect(value).not_to be_valid
     expect(value.errors[:value]).to include(match(/invalid/))
 
   it "resets cast state after validation"
     field = create(:integer_field)
-    value = TypedFields::Value.new(entity: create(:contact), field: field)
+    value = TypedEAV::Value.new(entity: create(:contact), field: field)
     value.value = "abc"
     value.valid?
     expect(field.last_cast_invalid).to be false  # reset after validation
@@ -333,20 +333,20 @@ describe "cast invalid detection"
 describe "pattern validation"
   it "validates text value against regex pattern"
     field = create(:text_field, options: { pattern: "\\A[A-Z]" })
-    value = TypedFields::Value.new(entity: create(:contact), field: field)
+    value = TypedEAV::Value.new(entity: create(:contact), field: field)
     value.value = "hello"
     expect(value).not_to be_valid
 
   it "accepts matching pattern"
     field = create(:text_field, options: { pattern: "\\A[A-Z]" })
-    value = TypedFields::Value.new(entity: create(:contact), field: field)
+    value = TypedEAV::Value.new(entity: create(:contact), field: field)
     value.value = "Hello"
     expect(value).to be_valid
 
   it "handles invalid regex pattern gracefully"
     field = create(:text_field)
     field.update_column(:options, { "pattern" => "[invalid" })
-    value = TypedFields::Value.new(entity: create(:contact), field: field)
+    value = TypedEAV::Value.new(entity: create(:contact), field: field)
     value.value = "test"
     expect(value).not_to be_valid
     expect(value.errors[:value]).to include(match(/invalid pattern/))
@@ -446,7 +446,7 @@ describe "decimal range validation"
 ```
 describe "pending value (field assigned after value)"
   it "applies pending value after field is assigned via after_initialize"
-    value = TypedFields::Value.new(field: field, value: "test")
+    value = TypedEAV::Value.new(field: field, value: "test")
     expect(value.value).to eq("test")
 ```
 
@@ -454,12 +454,12 @@ describe "pending value (field assigned after value)"
 ```
 describe "#value when field is nil"
   it "returns nil without error"
-    expect(TypedFields::Value.new.value).to be_nil
+    expect(TypedEAV::Value.new.value).to be_nil
 ```
 
 ---
 
-### File: `spec/models/typed_fields/section_and_option_spec.rb`
+### File: `spec/models/typed_eav/section_and_option_spec.rb`
 
 #### Existing (keep as-is):
 - [x] Section validations (name, code, entity_type, uniqueness)
@@ -475,7 +475,7 @@ describe ".sorted scope"
 
 describe "default active value"
   it "defaults to true"
-    expect(TypedFields::Section.new.active).to be true
+    expect(TypedEAV::Section.new.active).to be true
 ```
 
 #### NEW — Option:
@@ -491,7 +491,7 @@ describe "association inverse"
 
 ## Phase 3: Lib Specs
 
-### File: `spec/lib/typed_fields/query_builder_spec.rb`
+### File: `spec/lib/typed_eav/query_builder_spec.rb`
 
 #### Existing (keep as-is):
 - [x] Integer: eq, gt, lt, gteq, lteq, between, not_eq, string casting
@@ -576,7 +576,7 @@ describe ".filter with color fields"
 
 ---
 
-### File: `spec/lib/typed_fields/config_and_registry_spec.rb`
+### File: `spec/lib/typed_eav/config_and_registry_spec.rb`
 
 #### Existing (keep as-is):
 - [x] Config: includes all builtin types, resolves type name, raises for unknown, registers custom
@@ -588,7 +588,7 @@ it "includes :decimal_array and :date_array in type_names"
   expect(config.type_names).to include(:decimal_array, :date_array)
 
 it "resolves all 16 builtin types to their classes"
-  TypedFields::Config::BUILTIN_FIELD_TYPES.each do |name, class_name|
+  TypedEAV::Config::BUILTIN_FIELD_TYPES.each do |name, class_name|
     expect(config.field_class_for(name)).to eq(class_name.constantize)
   end
 ```
@@ -604,10 +604,10 @@ describe "#reset!"
 
 ---
 
-### File: `spec/lib/typed_fields/column_mapping_spec.rb` (NEW FILE)
+### File: `spec/lib/typed_eav/column_mapping_spec.rb` (NEW FILE)
 
 ```
-describe TypedFields::ColumnMapping do
+describe TypedEAV::ColumnMapping do
   describe ".value_column"
     it "raises NotImplementedError when not declared"
     it "returns declared column as symbol"
@@ -627,76 +627,76 @@ describe TypedFields::ColumnMapping do
 
 ---
 
-## Phase 4: HasTypedFields Integration Specs
+## Phase 4: HasTypedEAV Integration Specs
 
-### File: `spec/models/typed_fields/has_typed_fields_spec.rb`
+### File: `spec/models/typed_eav/has_typed_eav_spec.rb`
 
 #### Existing (keep as-is):
-- [x] has_typed_fields adds typed_values association
+- [x] has_typed_eav adds typed_values association
 - [x] registers in global registry
 - [x] stores scope_method and type restrictions
 - [x] typed_field_definitions filters by entity_type
 - [x] typed_field_definitions includes scoped fields
-- [x] where_typed_fields: single field, multiple fields (AND), compact keys, default :eq, nonexistent field, chaining
+- [x] where_typed_eav: single field, multiple fields (AND), compact keys, default :eq, nonexistent field, chaining
 - [x] with_field: short form, full form
 - [x] initialize_typed_values: builds missing, no duplicates
-- [x] typed_fields_attributes=: create, update, ignore unknown
+- [x] typed_eav_attributes=: create, update, ignore unknown
 - [x] typed_field_value / set_typed_field_value
-- [x] typed_fields_hash
+- [x] typed_eav_hash
 - [x] scoping: includes global+scoped, excludes other tenant
 
-#### FIX — where_typed_fields single hash regression test (P0):
+#### FIX — where_typed_eav single hash regression test (P0):
 ```
-describe ".where_typed_fields single hash argument (REGRESSION)"
+describe ".where_typed_eav single hash argument (REGRESSION)"
   it "REGRESSION: single hash filter is destructured incorrectly"
     # This documents the P0 bug from ANALYSIS.md 1.1
-    # where_typed_fields({name: "age", op: :eq, value: 30}) breaks
+    # where_typed_eav({name: "age", op: :eq, value: 30}) breaks
     # because filters.values extracts hash values as ["age", :eq, 30]
     expect {
-      Contact.where_typed_fields({name: "age", op: :gt, value: 20})
+      Contact.where_typed_eav({name: "age", op: :gt, value: 20})
     }.to raise_error  # or produce wrong results — document current behavior
 ```
 
-#### NEW — typed_fields_attributes= with _destroy:
+#### NEW — typed_eav_attributes= with _destroy:
 ```
-describe "#typed_fields_attributes= with _destroy"
+describe "#typed_eav_attributes= with _destroy"
   it "destroys existing values when _destroy is truthy"
-    contact.typed_fields_attributes = [{ name: "age", value: 30 }]
+    contact.typed_eav_attributes = [{ name: "age", value: 30 }]
     contact.save!
     expect(contact.typed_field_value("age")).to eq(30)
 
-    contact.typed_fields_attributes = [{ name: "age", _destroy: true }]
+    contact.typed_eav_attributes = [{ name: "age", _destroy: true }]
     contact.save!
     expect(contact.typed_values.count).to eq(0)
 
   it "handles _destroy for non-existent values gracefully"
-    contact.typed_fields_attributes = [{ name: "age", _destroy: true }]
+    contact.typed_eav_attributes = [{ name: "age", _destroy: true }]
     contact.save!  # should not error
 ```
 
-#### NEW — typed_fields_attributes= with type restrictions:
+#### NEW — typed_eav_attributes= with type restrictions:
 ```
-describe "#typed_fields_attributes= type restrictions"
+describe "#typed_eav_attributes= type restrictions"
   it "skips fields of disallowed types on restricted models"
     json_field = create(:json_field, entity_type: "Product")
     product = create(:product)
-    product.typed_fields_attributes = [{ name: json_field.name, value: { key: "val" } }]
+    product.typed_eav_attributes = [{ name: json_field.name, value: { key: "val" } }]
     product.save!
     expect(product.typed_values.count).to eq(0)
 
   it "allows fields of permitted types"
     text_field = create(:text_field, entity_type: "Product")
     product = create(:product)
-    product.typed_fields_attributes = [{ name: text_field.name, value: "hello" }]
+    product.typed_eav_attributes = [{ name: text_field.name, value: "hello" }]
     product.save!
     expect(product.typed_values.count).to eq(1)
 ```
 
-#### NEW — typed_fields_attributes= with Hash input (form params):
+#### NEW — typed_eav_attributes= with Hash input (form params):
 ```
-describe "#typed_fields_attributes= with Hash input"
+describe "#typed_eav_attributes= with Hash input"
   it "accepts hash-of-hashes (ActionController params format)"
-    contact.typed_fields_attributes = {
+    contact.typed_eav_attributes = {
       "0" => { name: "age", value: 30 },
       "1" => { name: "bio", value: "Hello" }
     }
@@ -735,7 +735,7 @@ describe "dependent: :destroy"
   it "destroys typed_values when entity is destroyed"
     contact.set_typed_field_value("nickname", "test")
     contact.save!
-    expect { contact.destroy! }.to change(TypedFields::Value, :count).by(-1)
+    expect { contact.destroy! }.to change(TypedEAV::Value, :count).by(-1)
 ```
 
 ---
@@ -747,9 +747,9 @@ describe "dependent: :destroy"
 These tests document known bugs from ANALYSIS.md. They should be written to FAIL against current code (pending or xfail), then pass once bugs are fixed.
 
 ```
-describe "ANALYSIS 1.1: where_typed_fields single hash destructuring"
+describe "ANALYSIS 1.1: where_typed_eav single hash destructuring"
   it "should handle single hash filter correctly", pending: "P0 bug"
-    # where_typed_fields({name: "age", op: :gt, value: 20}) should work
+    # where_typed_eav({name: "age", op: :gt, value: 20}) should work
 
 describe "ANALYSIS 1.2: Boolean casts garbage to true"
   it "should reject non-boolean strings", pending: "P0 bug"
@@ -759,7 +759,7 @@ describe "ANALYSIS 1.2: Boolean casts garbage to true"
 describe "ANALYSIS 2.1: DecimalArray type drift through JSON"
   it "documents BigDecimal type drift on round-trip"
     field = create(:decimal_array_field, entity_type: "Contact")
-    value = TypedFields::Value.create!(entity: create(:contact), field: field)
+    value = TypedEAV::Value.create!(entity: create(:contact), field: field)
     value.value = [BigDecimal("0.1"), BigDecimal("0.2")]
     value.save!
     value.reload
@@ -785,7 +785,7 @@ describe "ANALYSIS 2.6: DateTime cast doesn't mark invalid"
 
 describe "ANALYSIS 2.7: Silent ignore of non-existent field names"
   it "documents that typos silently return all records"
-    results = Contact.where_typed_fields({ name: "nonexistent_typo", op: :eq, value: "x" })
+    results = Contact.where_typed_eav({ name: "nonexistent_typo", op: :eq, value: "x" })
     # returns all contacts instead of raising
 
 describe "ANALYSIS 3.1: Integer truncates decimals silently"
@@ -802,7 +802,7 @@ describe "ANALYSIS 3.2: validate_range with malformed options"
 
 ## Phase 6: Integration / End-to-End Specs
 
-### File: `spec/integration/typed_fields_lifecycle_spec.rb` (NEW FILE)
+### File: `spec/integration/typed_eav_lifecycle_spec.rb` (NEW FILE)
 
 ```
 describe "Full entity lifecycle"
@@ -813,7 +813,7 @@ describe "Full entity lifecycle"
 
     # 2. Create entity and assign values
     contact = create(:contact)
-    contact.typed_fields_attributes = [
+    contact.typed_eav_attributes = [
       { name: "age", value: 30 },
       { name: "city", value: "Portland" }
     ]
@@ -821,7 +821,7 @@ describe "Full entity lifecycle"
 
     # 3. Read back values
     expect(contact.typed_field_value("age")).to eq(30)
-    expect(contact.typed_fields_hash).to eq({ "age" => 30, "city" => "Portland" })
+    expect(contact.typed_eav_hash).to eq({ "age" => 30, "city" => "Portland" })
 
     # 4. Query
     expect(Contact.with_field("age", :gt, 25)).to include(contact)
@@ -833,7 +833,7 @@ describe "Full entity lifecycle"
     expect(contact.typed_field_value("age")).to eq(31)
 
     # 6. Delete entity cascades
-    expect { contact.destroy! }.to change(TypedFields::Value, :count).by(-2)
+    expect { contact.destroy! }.to change(TypedEAV::Value, :count).by(-2)
 
 describe "Multi-field AND query"
   it "filters by multiple fields simultaneously"
@@ -845,27 +845,27 @@ describe "Field definition lifecycle"
   it "field destroy cascades to values and options"
     field = create(:select_field)
     contact = create(:contact)
-    TypedFields::Value.create!(entity: contact, field: field).tap { |v| v.value = "active"; v.save! }
+    TypedEAV::Value.create!(entity: contact, field: field).tap { |v| v.value = "active"; v.save! }
 
-    expect { field.destroy! }.to change(TypedFields::Value, :count).by(-1)
-      .and change(TypedFields::Option, :count).by(-3)
+    expect { field.destroy! }.to change(TypedEAV::Value, :count).by(-1)
+      .and change(TypedEAV::Option, :count).by(-3)
 ```
 
 ---
 
 ## Phase 7: Generator Specs (optional, lower priority)
 
-### File: `spec/generators/typed_fields/install_generator_spec.rb` (NEW FILE)
+### File: `spec/generators/typed_eav/install_generator_spec.rb` (NEW FILE)
 
 ```
-describe TypedFields::Generators::InstallGenerator
+describe TypedEAV::Generators::InstallGenerator
   it "copies migration file to host app"
 ```
 
-### File: `spec/generators/typed_fields/scaffold_generator_spec.rb` (NEW FILE)
+### File: `spec/generators/typed_eav/scaffold_generator_spec.rb` (NEW FILE)
 
 ```
-describe TypedFields::Generators::ScaffoldGenerator
+describe TypedEAV::Generators::ScaffoldGenerator
   it "creates controller file"
   it "creates concern file"
   it "creates helper file"
@@ -882,7 +882,7 @@ describe TypedFields::Generators::ScaffoldGenerator
 | 1 | Factories, Gemfile, spec_helper | 0 (infrastructure) | **Must do first** |
 | 2 | field_spec, value_spec, section_and_option_spec | ~80 new tests | **High** |
 | 3 | query_builder_spec, config_and_registry_spec, column_mapping_spec | ~25 new tests | **High** |
-| 4 | has_typed_fields_spec | ~15 new tests | **High** |
+| 4 | has_typed_eav_spec | ~15 new tests | **High** |
 | 5 | regressions/known_bugs_spec | ~12 tests | **Medium** |
 | 6 | integration/lifecycle_spec | ~5 tests | **Medium** |
 | 7 | generators/ | ~5 tests | **Low** |
@@ -897,21 +897,21 @@ describe TypedFields::Generators::ScaffoldGenerator
 ```
 spec/
   spec_helper.rb                              (updated: shoulda-matchers config)
-  factories/typed_fields.rb                   (updated: 5 new factories)
-  models/typed_fields/
+  factories/typed_eav.rb                   (updated: 5 new factories)
+  models/typed_eav/
     field_spec.rb                             (updated: ~55 new examples)
     value_spec.rb                             (updated: ~25 new examples)
-    has_typed_fields_spec.rb                  (updated: ~15 new examples)
+    has_typed_eav_spec.rb                  (updated: ~15 new examples)
     section_and_option_spec.rb                (updated: ~4 new examples)
-  lib/typed_fields/
+  lib/typed_eav/
     query_builder_spec.rb                     (updated: ~20 new examples, 1 fix)
     config_and_registry_spec.rb               (updated: ~5 new examples)
     column_mapping_spec.rb                    (NEW: ~10 examples)
   regressions/
     known_bugs_spec.rb                        (NEW: ~12 examples)
   integration/
-    typed_fields_lifecycle_spec.rb            (NEW: ~5 examples)
-  generators/typed_fields/
+    typed_eav_lifecycle_spec.rb            (NEW: ~5 examples)
+  generators/typed_eav/
     install_generator_spec.rb                 (NEW: ~1 example)
     scaffold_generator_spec.rb                (NEW: ~5 examples)
 ```

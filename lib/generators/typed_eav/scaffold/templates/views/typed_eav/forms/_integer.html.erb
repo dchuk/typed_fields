@@ -1,0 +1,21 @@
+<%= form_with(model: field, scope: :typed_eav_field,
+      url: field.persisted? ? typed_eav_field_path(field) : typed_eav_fields_path) do |f| %>
+  <%= render "typed_eav/forms/common_fields", f: f, field: field %>
+
+  <div>
+    <%= f.label :min %>
+    <%= f.number_field :min, value: field.min %>
+  </div>
+
+  <div>
+    <%= f.label :max %>
+    <%= f.number_field :max, value: field.max %>
+  </div>
+
+  <div>
+    <%= f.label :default_value %>
+    <%= f.number_field :default_value, value: field.default_value %>
+  </div>
+
+  <div><%= f.submit field.persisted? ? "Update" : "Create" %></div>
+<% end %>

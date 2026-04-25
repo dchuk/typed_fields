@@ -1,0 +1,12 @@
+<%= form_with(model: field, scope: :typed_eav_field,
+      url: field.persisted? ? typed_eav_field_path(field) : typed_eav_fields_path) do |f| %>
+  <%= render "typed_eav/forms/common_fields", f: f, field: field %>
+
+  <div>
+    <%= f.label :default_value %>
+    <%= f.select :default_value, [["None", ""], ["True", "true"], ["False", "false"]],
+          { selected: field.default_value.to_s } %>
+  </div>
+
+  <div><%= f.submit field.persisted? ? "Update" : "Create" %></div>
+<% end %>

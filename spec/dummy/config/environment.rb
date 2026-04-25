@@ -5,7 +5,7 @@ require "rails/all"
 
 Bundler.require(*Rails.groups)
 
-require "typed_fields"
+require "typed_eav"
 
 module Dummy
   class Application < Rails::Application

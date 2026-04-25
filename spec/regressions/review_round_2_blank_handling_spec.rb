@@ -17,21 +17,21 @@ RSpec.describe "Review round 2: blank handling in array-valued fields" do
     let(:field) { create(:text_array_field, required: true) }
 
     it "rejects a single whitespace-only element" do
-      value = TypedFields::Value.new(entity: contact, field: field)
+      value = TypedEAV::Value.new(entity: contact, field: field)
       value.value = [" "]
       expect(value).not_to be_valid
       expect(value.errors.details[:value]).to include(a_hash_including(error: :blank))
     end
 
     it "rejects a mix of empty, nil, and whitespace-only elements" do
-      value = TypedFields::Value.new(entity: contact, field: field)
+      value = TypedEAV::Value.new(entity: contact, field: field)
       value.value = ["", nil, "   "]
       expect(value).not_to be_valid
       expect(value.errors.details[:value]).to include(a_hash_including(error: :blank))
     end
 
     it "accepts an element with real content and preserves inner whitespace" do
-      value = TypedFields::Value.new(entity: contact, field: field)
+      value = TypedEAV::Value.new(entity: contact, field: field)
       value.value = [" actual "]
       expect(value).to be_valid
       # Only purely blank elements are dropped; leading/trailing spaces inside
@@ -45,14 +45,14 @@ RSpec.describe "Review round 2: blank handling in array-valued fields" do
       let(:field) { create(:multi_select_field) }
 
       it "treats [\"\"] as an empty submission and stores nil" do
-        value = TypedFields::Value.new(entity: contact, field: field)
+        value = TypedEAV::Value.new(entity: contact, field: field)
         value.value = [""]
         expect(value).to be_valid
         expect(value.value).to be_nil
       end
 
       it "filters the sentinel out when combined with a real selection" do
-        value = TypedFields::Value.new(entity: contact, field: field)
+        value = TypedEAV::Value.new(entity: contact, field: field)
         value.value = ["", "vip"]
         expect(value).to be_valid
         expect(value.value).to eq(["vip"])
@@ -63,7 +63,7 @@ RSpec.describe "Review round 2: blank handling in array-valued fields" do
       let(:field) { create(:multi_select_field, required: true) }
 
       it "rejects [\"\"] as blank rather than as an invalid option" do
-        value = TypedFields::Value.new(entity: contact, field: field)
+        value = TypedEAV::Value.new(entity: contact, field: field)
         value.value = [""]
         expect(value).not_to be_valid
         expect(value.errors.details[:value]).to include(a_hash_including(error: :blank))

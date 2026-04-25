@@ -10,29 +10,29 @@ require "spec_helper"
 # - Tests WITHOUT pending verify the fix is in place (for already-fixed bugs).
 
 RSpec.describe "Regressions from ANALYSIS.md" do
-  describe "ANALYSIS 1.1: where_typed_fields single hash destructuring (FIXED)", :unscoped do
+  describe "ANALYSIS 1.1: where_typed_eav single hash destructuring (FIXED)", :unscoped do
     let!(:field) { create(:integer_field, name: "age", entity_type: "Contact") }
     let!(:contact) { create(:contact) }
 
     before do
-      TypedFields::Value.create!(entity: contact, field: field).tap do |v|
+      TypedEAV::Value.create!(entity: contact, field: field).tap do |v|
         v.value = 30
         v.save!
       end
     end
 
     it "handles array-wrapped filter" do
-      results = Contact.where_typed_fields([{ name: "age", op: :eq, value: 30 }])
+      results = Contact.where_typed_eav([{ name: "age", op: :eq, value: 30 }])
       expect(results).to include(contact)
     end
 
     it "handles single hash filter" do
-      results = Contact.where_typed_fields({ name: "age", op: :eq, value: 30 })
+      results = Contact.where_typed_eav({ name: "age", op: :eq, value: 30 })
       expect(results).to include(contact)
     end
 
     it "handles hash-of-hashes (form params)" do
-      results = Contact.where_typed_fields({ "0" => { name: "age", op: :eq, value: 30 } })
+      results = Contact.where_typed_eav({ "0" => { name: "age", op: :eq, value: 30 } })
       expect(results).to include(contact)
     end
   end
@@ -57,7 +57,7 @@ RSpec.describe "Regressions from ANALYSIS.md" do
     let!(:contact) { create(:contact) }
 
     before do
-      TypedFields::Value.create!(entity: contact, field: field).tap do |v|
+      TypedEAV::Value.create!(entity: contact, field: field).tap do |v|
         v.value = 30
         v.save!
       end
@@ -65,7 +65,7 @@ RSpec.describe "Regressions from ANALYSIS.md" do
 
     it "raises for unknown field names (FIXED)" do
       expect do
-        Contact.where_typed_fields([{ name: "nonexistent_typo", op: :eq, value: "x" }])
+        Contact.where_typed_eav([{ name: "nonexistent_typo", op: :eq, value: "x" }])
       end.to raise_error(ArgumentError)
     end
   end
@@ -88,7 +88,7 @@ RSpec.describe "Regressions from ANALYSIS.md" do
 
   describe "ANALYSIS 2.4: Registry type restrictions should be enforced" do
     it "prevents creating disallowed field types (FIXED)" do
-      field = TypedFields::Field::Json.new(name: "data", entity_type: "Product")
+      field = TypedEAV::Field::Json.new(name: "data", entity_type: "Product")
       expect(field).not_to be_valid
     end
   end
@@ -100,7 +100,7 @@ RSpec.describe "Regressions from ANALYSIS.md" do
     let(:tenant_b_contact) { create(:contact, tenant_id: "tenant_b") }
 
     it "rejects a value for a field belonging to another scope" do
-      value = TypedFields::Value.new(entity: tenant_b_contact, field: scoped_field)
+      value = TypedEAV::Value.new(entity: tenant_b_contact, field: scoped_field)
       value.value = "leak"
       expect(value).not_to be_valid
       expect(value.errors[:field]).to be_present
@@ -108,14 +108,14 @@ RSpec.describe "Regressions from ANALYSIS.md" do
 
     it "accepts a value for a field whose scope matches the entity" do
       tenant_a_contact = create(:contact, tenant_id: "tenant_a")
-      value = TypedFields::Value.new(entity: tenant_a_contact, field: scoped_field)
+      value = TypedEAV::Value.new(entity: tenant_a_contact, field: scoped_field)
       value.value = "ok"
       expect(value).to be_valid
     end
 
     it "accepts values for global (scope=nil) fields regardless of entity scope" do
       global_field = create(:text_field, name: "global_note", entity_type: "Contact", scope: nil)
-      value = TypedFields::Value.new(entity: tenant_b_contact, field: global_field)
+      value = TypedEAV::Value.new(entity: tenant_b_contact, field: global_field)
       value.value = "ok"
       expect(value).to be_valid
     end
@@ -126,7 +126,7 @@ RSpec.describe "Regressions from ANALYSIS.md" do
 
     it "rejects blank string for required text field" do
       field = create(:text_field, required: true)
-      value = TypedFields::Value.new(entity: contact, field: field)
+      value = TypedEAV::Value.new(entity: contact, field: field)
       value.value = "   "
       expect(value).not_to be_valid
       expect(value.errors[:value]).to include(match(/blank/))
@@ -134,7 +134,7 @@ RSpec.describe "Regressions from ANALYSIS.md" do
 
     it "rejects array of blanks for required text_array field" do
       field = create(:text_array_field, required: true)
-      value = TypedFields::Value.new(entity: contact, field: field)
+      value = TypedEAV::Value.new(entity: contact, field: field)
       value.value = ["", nil, ""]
       expect(value).not_to be_valid
       expect(value.errors[:value]).to include(match(/blank/))
@@ -146,7 +146,7 @@ RSpec.describe "Regressions from ANALYSIS.md" do
     let(:field) { create(:json_field) }
 
     it "parses JSON object strings into hashes" do
-      value = TypedFields::Value.new(entity: contact, field: field)
+      value = TypedEAV::Value.new(entity: contact, field: field)
       value.value = '{"key":"val"}'
       expect(value).to be_valid
       value.save!
@@ -155,14 +155,14 @@ RSpec.describe "Regressions from ANALYSIS.md" do
     end
 
     it "marks invalid JSON strings as invalid" do
-      value = TypedFields::Value.new(entity: contact, field: field)
+      value = TypedEAV::Value.new(entity: contact, field: field)
       value.value = "{not valid"
       expect(value).not_to be_valid
       expect(value.errors[:value]).to include(match(/invalid/))
     end
 
     it "passes through already-parsed hashes" do
-      value = TypedFields::Value.new(entity: contact, field: field)
+      value = TypedEAV::Value.new(entity: contact, field: field)
       value.value = { "a" => 1 }
       expect(value).to be_valid
     end
@@ -173,7 +173,7 @@ RSpec.describe "Regressions from ANALYSIS.md" do
     let(:field) { create(:integer_array_field) }
 
     it "marks fractional input as invalid rather than truncating" do
-      value = TypedFields::Value.new(entity: contact, field: field)
+      value = TypedEAV::Value.new(entity: contact, field: field)
       value.value = ["1.9", "2"]
       expect(value).not_to be_valid
       expect(value.errors[:value]).to include(match(/invalid/))
@@ -181,7 +181,7 @@ RSpec.describe "Regressions from ANALYSIS.md" do
 
     it "enforces per-element min/max" do
       field = create(:integer_array_field, options: { "min" => 10, "max" => 20 })
-      value = TypedFields::Value.new(entity: contact, field: field)
+      value = TypedEAV::Value.new(entity: contact, field: field)
       value.value = [15, 25]
       expect(value).not_to be_valid
     end

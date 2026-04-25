@@ -1,0 +1,6 @@
+<%= form_with(model: field, scope: :typed_eav_field,
+      url: field.persisted? ? typed_eav_field_path(field) : typed_eav_fields_path) do |f| %>
+  <%= render "typed_eav/forms/common_fields", f: f, field: field %>
+
+  <div><%= f.submit field.persisted? ? "Update" : "Create" %></div>
+<% end %>

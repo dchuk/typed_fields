@@ -1,0 +1,42 @@
+<h1>Typed Fields</h1>
+
+<div style="margin-bottom: 1rem;">
+  <%= form_with url: new_typed_eav_field_path, method: :get do |f| %>
+    <%= f.select :type, TypedEAV.config.type_names %>
+    <%= f.submit "New Field" %>
+  <% end %>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>ID</th>
+      <th>Type</th>
+      <th>Entity</th>
+      <th>Name</th>
+      <th>Required</th>
+      <th>Scope</th>
+      <th>Options</th>
+      <th>Default</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @fields.each do |field| %>
+      <tr>
+        <td><%= link_to "Edit", edit_typed_eav_field_path(field) %></td>
+        <td><%= link_to "##{field.id}", typed_eav_field_path(field) %></td>
+        <td><%= field.field_type_name %></td>
+        <td><%= field.entity_type %></td>
+        <td><%= field.name %></td>
+        <td><%= field.required? ? "Yes" : "" %></td>
+        <td><code><%= field.scope.inspect %></code></td>
+        <td><code><%= field.options %></code></td>
+        <td><code><%= field.default_value.inspect %></code></td>
+        <td><%= button_to "Delete", typed_eav_field_path(field), method: :delete,
+              data: { turbo_confirm: "Delete this field and all its values?" } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

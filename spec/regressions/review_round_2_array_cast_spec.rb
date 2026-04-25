@@ -10,7 +10,7 @@ require "spec_helper"
 RSpec.describe "Array field cast preserves invalid state" do
   let(:contact) { create(:contact) }
 
-  describe TypedFields::Field::IntegerArray do
+  describe TypedEAV::Field::IntegerArray do
     let(:field) { create(:integer_array_field) }
 
     it "returns [nil, true] when any element is fractional" do
@@ -30,7 +30,7 @@ RSpec.describe "Array field cast preserves invalid state" do
     end
 
     it "surfaces :invalid on the value record, not silent truncation" do
-      value = TypedFields::Value.new(entity: contact, field: field)
+      value = TypedEAV::Value.new(entity: contact, field: field)
       value.value = ["1", "2.9", "3"]
       expect(value).not_to be_valid
       expect(value.errors[:value]).to include(match(/invalid/))
@@ -40,7 +40,7 @@ RSpec.describe "Array field cast preserves invalid state" do
     end
   end
 
-  describe TypedFields::Field::DecimalArray do
+  describe TypedEAV::Field::DecimalArray do
     let(:field) { create(:decimal_array_field) }
 
     it "returns [nil, true] when any element is unparseable" do
@@ -54,7 +54,7 @@ RSpec.describe "Array field cast preserves invalid state" do
     end
   end
 
-  describe TypedFields::Field::DateArray do
+  describe TypedEAV::Field::DateArray do
     let(:field) { create(:date_array_field) }
 
     it "returns [nil, true] when any element is not a valid date" do

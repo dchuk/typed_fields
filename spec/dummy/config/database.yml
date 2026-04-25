@@ -1,5 +1,5 @@
 test:
   adapter: postgresql
-  database: typed_fields_test
+  database: typed_eav_test
   host: localhost
   encoding: unicode

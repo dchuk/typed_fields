@@ -5,8 +5,8 @@ require "spec_helper"
 # Regression: ambient scope leaked into models that never opted into scoping.
 #
 # Before the fix, `typed_field_definitions` on an un-scoped host (e.g. Product,
-# which declares `has_typed_fields` without `scope_method:`) would consult
-# `TypedFields.current_scope` and, inside a `with_scope` block, return the
+# which declares `has_typed_eav` without `scope_method:`) would consult
+# `TypedEAV.current_scope` and, inside a `with_scope` block, return the
 # union of tenant-scoped fields + globals. That's wrong on two counts:
 #   1. Product has no per-instance scope accessor, so
 #      `Value#validate_field_scope_matches_entity` rejects any attempt to
@@ -14,18 +14,18 @@ require "spec_helper"
 #   2. A model that never opted into tenancy shouldn't see cross-model
 #      ambient state.
 #
-# The fix short-circuits in `resolve_scope` when `typed_fields_scope_method`
+# The fix short-circuits in `resolve_scope` when `typed_eav_scope_method`
 # is not set, returning nil (globals-only). Explicit `scope:` overrides and
-# `TypedFields.unscoped { }` remain fully functional. Scoped models
+# `TypedEAV.unscoped { }` remain fully functional. Scoped models
 # (Contact) are unchanged.
 RSpec.describe "Round-2 review: ambient scope must not leak into un-scoped models", :scoping do
   before do
-    TypedFields.config.scope_resolver = nil
-    TypedFields.config.require_scope = true
+    TypedEAV.config.scope_resolver = nil
+    TypedEAV.config.require_scope = true
   end
 
   after do
-    TypedFields.config.reset!
+    TypedEAV.config.reset!
   end
 
   describe "Product (no scope_method: declared)" do
@@ -40,7 +40,7 @@ RSpec.describe "Round-2 review: ambient scope must not leak into un-scoped model
     end
 
     it "ignores ambient scope: with_scope('tenant_a') still returns globals only" do
-      TypedFields.with_scope("tenant_a") do
+      TypedEAV.with_scope("tenant_a") do
         fields = Product.typed_field_definitions
         expect(fields).to contain_exactly(product_global)
         expect(fields).not_to include(product_scoped_a)
@@ -57,14 +57,14 @@ RSpec.describe "Round-2 review: ambient scope must not leak into un-scoped model
     end
 
     it "explicit scope: nil still means global-only (unchanged)" do
-      TypedFields.with_scope("tenant_a") do
+      TypedEAV.with_scope("tenant_a") do
         fields = Product.typed_field_definitions(scope: nil)
         expect(fields).to contain_exactly(product_global)
       end
     end
 
-    it "inside TypedFields.unscoped { } returns fields across ALL scopes (unchanged)" do
-      TypedFields.unscoped do
+    it "inside TypedEAV.unscoped { } returns fields across ALL scopes (unchanged)" do
+      TypedEAV.unscoped do
         fields = Product.typed_field_definitions
         expect(fields).to include(product_scoped_a, product_scoped_b, product_global)
       end
@@ -72,15 +72,15 @@ RSpec.describe "Round-2 review: ambient scope must not leak into un-scoped model
 
     it "does not raise ScopeRequired when require_scope is true (unchanged)" do
       # Un-scoped hosts never fail-closed; the fail-closed gate is keyed on
-      # `typed_fields_scope_method`.
-      TypedFields.config.require_scope = true
+      # `typed_eav_scope_method`.
+      TypedEAV.config.require_scope = true
       expect { Product.typed_field_definitions }.not_to raise_error
     end
 
     it "ignores a configured ambient resolver too (not just with_scope)" do
       # The short-circuit sits before the ambient lookup, so a configured
       # resolver on an un-scoped host is equally inert.
-      TypedFields.config.scope_resolver = -> { "tenant_a" }
+      TypedEAV.config.scope_resolver = -> { "tenant_a" }
       fields = Product.typed_field_definitions
       expect(fields).to contain_exactly(product_global)
     end
@@ -98,7 +98,7 @@ RSpec.describe "Round-2 review: ambient scope must not leak into un-scoped model
     end
 
     it "with_scope('tenant_a'): returns tenant_a + global (scoped models still honor ambient)" do
-      TypedFields.with_scope("tenant_a") do
+      TypedEAV.with_scope("tenant_a") do
         fields = Contact.typed_field_definitions
         expect(fields).to include(contact_scoped_a, contact_global)
         expect(fields).not_to include(contact_scoped_b)
@@ -108,17 +108,17 @@ RSpec.describe "Round-2 review: ambient scope must not leak into un-scoped model
     it "no ambient + require_scope=true: raises ScopeRequired (fail-closed preserved)" do
       expect do
         Contact.typed_field_definitions
-      end.to raise_error(TypedFields::ScopeRequired, /No ambient scope resolvable for Contact/)
+      end.to raise_error(TypedEAV::ScopeRequired, /No ambient scope resolvable for Contact/)
     end
 
     it "no ambient + require_scope=false: returns globals only (unchanged)" do
-      TypedFields.config.require_scope = false
+      TypedEAV.config.require_scope = false
       fields = Contact.typed_field_definitions
       expect(fields).to contain_exactly(contact_global)
     end
 
     it "inside unscoped { }: returns fields across all scopes (unchanged)" do
-      TypedFields.unscoped do
+      TypedEAV.unscoped do
         fields = Contact.typed_field_definitions
         expect(fields).to include(contact_scoped_a, contact_scoped_b, contact_global)
       end

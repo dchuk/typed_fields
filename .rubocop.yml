@@ -118,7 +118,7 @@ Rails/HasManyOrHasOneDependent:
   Enabled: false
 Rails/ApplicationRecord:
   Exclude:
-    - "app/models/typed_fields/application_record.rb"
+    - "app/models/typed_eav/application_record.rb"
     - "spec/dummy/**/*"
 Rails/Output:
   Exclude:
@@ -146,14 +146,14 @@ RSpec/DescribeClass:
   Exclude:
     - "spec/integration/**/*"
     - "spec/regressions/**/*"
-    - "spec/lib/typed_fields/scoping_spec.rb"
-    - "spec/lib/typed_fields/zeitwerk_loading_spec.rb"
-    - "spec/models/typed_fields/field_spec.rb"
+    - "spec/lib/typed_eav/scoping_spec.rb"
+    - "spec/lib/typed_eav/zeitwerk_loading_spec.rb"
+    - "spec/models/typed_eav/field_spec.rb"
 RSpec/MultipleDescribes:
   Exclude:
-    - "spec/models/typed_fields/field_spec.rb"
-    - "spec/models/typed_fields/section_and_option_spec.rb"
-    - "spec/lib/typed_fields/config_and_registry_spec.rb"
+    - "spec/models/typed_eav/field_spec.rb"
+    - "spec/models/typed_eav/section_and_option_spec.rb"
+    - "spec/lib/typed_eav/config_and_registry_spec.rb"
 RSpec/SpecFilePathFormat:
   Enabled: true
 RSpec/IndexedLet:

@@ -14,7 +14,7 @@ require_relative "dummy/app/models/test_models"
 ActiveRecord::Migration.maintain_test_schema!
 
 # Ensure engine migrations are included in the migration paths
-engine_migration_path = TypedFields::Engine.root.join("db/migrate").to_s
+engine_migration_path = TypedEAV::Engine.root.join("db/migrate").to_s
 unless ActiveRecord::Migrator.migrations_paths.include?(engine_migration_path)
   ActiveRecord::Migrator.migrations_paths << engine_migration_path
 end
@@ -40,7 +40,7 @@ RSpec.configure do |config|
 
   config.include FactoryBot::Syntax::Methods
 
-  # No registry reset — let has_typed_fields registrations from
+  # No registry reset — let has_typed_eav registrations from
   # class loading persist so registration tests are meaningful.
 
   # Scope-handling metadata contract:
@@ -48,7 +48,7 @@ RSpec.configure do |config|
   #   :scoping  - "I manage scope explicitly, don't wrap me." These specs
   #               drive `with_scope` / `unscoped` / resolver config themselves
   #               and must run with a clean ambient state.
-  #   :unscoped - "Wrap me in `TypedFields.unscoped` so the fail-closed default
+  #   :unscoped - "Wrap me in `TypedEAV.unscoped` so the fail-closed default
   #               on scoped models (e.g. Contact with `scope_method: :tenant_id`)
   #               doesn't raise when the example calls class-level query
   #               methods without setting up a scope."
@@ -58,7 +58,7 @@ RSpec.configure do |config|
   # in the class-level query path — opt-in is the safer contract.
   config.around do |example|
     if example.metadata[:unscoped]
-      TypedFields.unscoped { example.run }
+      TypedEAV.unscoped { example.run }
     else
       example.run
     end
