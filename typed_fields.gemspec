@@ -6,6 +6,7 @@ Gem::Specification.new do |spec|
   spec.name        = "typed_fields"
   spec.version     = TypedFields::VERSION
   spec.authors     = ["Darrin Chuk"]
+  spec.email       = ["me@dchuk.com"]
   spec.summary     = "Typed custom fields for ActiveRecord models"
   spec.description = <<~DESC.tr("\n", " ").strip
     Add dynamic custom fields to ActiveRecord models at runtime using native
@@ -17,8 +18,17 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 3.1"
 
+  spec.metadata = {
+    "homepage_uri"          => spec.homepage,
+    "source_code_uri"       => spec.homepage,
+    "changelog_uri"         => "#{spec.homepage}/blob/main/CHANGELOG.md",
+    "bug_tracker_uri"       => "#{spec.homepage}/issues",
+    "allowed_push_host"     => "https://rubygems.org",
+    "rubygems_mfa_required" => "true",
+  }
+
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
-    Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
+    Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md", "CHANGELOG.md"]
   end
 
   spec.add_dependency "rails", ">= 7.1"
