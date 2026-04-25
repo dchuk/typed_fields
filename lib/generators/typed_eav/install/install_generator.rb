@@ -5,6 +5,7 @@ require "rails/generators"
 module TypedEAV
   module Generators
     class InstallGenerator < ::Rails::Generators::Base
+      namespace "typed_eav:install"
       source_root File.expand_path("../../..", __dir__)
 
       desc "Copies TypedEAV migrations to your application"

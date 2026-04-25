@@ -5,6 +5,7 @@ require "rails/generators"
 module TypedEAV
   module Generators
     class ScaffoldGenerator < ::Rails::Generators::Base
+      namespace "typed_eav:scaffold"
       source_root File.expand_path("templates", __dir__)
 
       desc "Generates controller, views, helper, and Stimulus controllers for managing typed fields"
