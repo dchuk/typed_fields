@@ -1,6 +1,6 @@
 <h1>Edit <%= @field.field_type_name.humanize %> Field: <%= @field.name %></h1>
 
-<%= render_typed_field_form(field: @field) %>
+<%= render_typed_eav_form(field: @field) %>
 
 <% if @field.optionable? %>
   <hr>

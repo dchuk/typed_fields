@@ -92,7 +92,7 @@ FactoryBot.define do
     options { {} }
   end
 
-  factory :email_typed_field, class: "TypedEAV::Field::Email" do
+  factory :email_typed_eav, class: "TypedEAV::Field::Email" do
     sequence(:name) { |n| "email_field_#{n}" }
     entity_type { "Contact" }
   end

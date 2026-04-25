@@ -24,12 +24,12 @@ RSpec.describe TypedEAV::HasTypedEAV, type: :model do
     end
   end
 
-  describe ".typed_field_definitions", :unscoped do
+  describe ".typed_eav_definitions", :unscoped do
     let!(:age_field) { create(:integer_field, name: "age", entity_type: "Contact") }
     let!(:product_weight) { create(:decimal_field, name: "weight", entity_type: "Product") }
 
     it "returns only fields for the model's entity type" do
-      fields = Contact.typed_field_definitions
+      fields = Contact.typed_eav_definitions
       expect(fields).to include(age_field)
       expect(fields).not_to include(product_weight)
     end
@@ -38,7 +38,7 @@ RSpec.describe TypedEAV::HasTypedEAV, type: :model do
       scoped = create(:text_field, name: "dept_note", entity_type: "Contact", scope: "tenant_1")
       global = create(:text_field, name: "global_note", entity_type: "Contact", scope: nil)
 
-      fields = Contact.typed_field_definitions(scope: "tenant_1")
+      fields = Contact.typed_eav_definitions(scope: "tenant_1")
       expect(fields).to include(scoped, global)
     end
   end
@@ -157,8 +157,8 @@ RSpec.describe TypedEAV::HasTypedEAV, type: :model do
       ]
       contact.save!
 
-      expect(contact.typed_field_value("age")).to eq(30)
-      expect(contact.typed_field_value("bio")).to eq("Hello")
+      expect(contact.typed_eav_value("age")).to eq(30)
+      expect(contact.typed_eav_value("bio")).to eq("Hello")
     end
 
     it "updates existing values" do
@@ -170,7 +170,7 @@ RSpec.describe TypedEAV::HasTypedEAV, type: :model do
       contact.typed_eav_attributes = [{ name: "age", value: 30 }]
       contact.save!
 
-      expect(contact.typed_field_value("age")).to eq(30)
+      expect(contact.typed_eav_value("age")).to eq(30)
       expect(contact.typed_values.where(field: age_field).count).to eq(1)
     end
 
@@ -182,16 +182,16 @@ RSpec.describe TypedEAV::HasTypedEAV, type: :model do
     end
   end
 
-  describe "#typed_field_value and #set_typed_field_value" do
+  describe "#typed_eav_value and #set_typed_eav_value" do
     let(:contact) { create(:contact) }
 
     before { create(:text_field, name: "nickname", entity_type: "Contact") }
 
     it "sets and reads a value by field name" do
-      contact.set_typed_field_value("nickname", "Ace")
+      contact.set_typed_eav_value("nickname", "Ace")
       contact.save!
 
-      expect(contact.typed_field_value("nickname")).to eq("Ace")
+      expect(contact.typed_eav_value("nickname")).to eq("Ace")
     end
   end
 
@@ -223,13 +223,13 @@ RSpec.describe TypedEAV::HasTypedEAV, type: :model do
     let(:contact) { create(:contact, tenant_id: "t1") }
 
     it "includes global and scoped fields for the contact's tenant" do
-      definitions = contact.typed_field_definitions
+      definitions = contact.typed_eav_definitions
       expect(definitions).to include(global_field, tenant_field)
     end
 
     it "excludes fields scoped to other tenants" do
       other_tenant_field = create(:text_field, name: "other", entity_type: "Contact", scope: "t2")
-      definitions = contact.typed_field_definitions
+      definitions = contact.typed_eav_definitions
       expect(definitions).not_to include(other_tenant_field)
     end
   end
@@ -242,7 +242,7 @@ RSpec.describe TypedEAV::HasTypedEAV, type: :model do
     it "destroys existing values when _destroy is truthy" do
       contact.typed_eav_attributes = [{ name: "age", value: 30 }]
       contact.save!
-      expect(contact.typed_field_value("age")).to eq(30)
+      expect(contact.typed_eav_value("age")).to eq(30)
 
       contact.reload
       contact.typed_eav_attributes = [{ name: "age", _destroy: "1" }]
@@ -290,27 +290,27 @@ RSpec.describe TypedEAV::HasTypedEAV, type: :model do
         "1" => { name: "bio", value: "Hello" },
       }
       contact.save!
-      expect(contact.typed_field_value("age")).to eq(30)
-      expect(contact.typed_field_value("bio")).to eq("Hello")
+      expect(contact.typed_eav_value("age")).to eq(30)
+      expect(contact.typed_eav_value("bio")).to eq("Hello")
     end
   end
 
-  describe "#set_typed_field_value edge cases" do
+  describe "#set_typed_eav_value edge cases" do
     let(:contact) { create(:contact) }
 
     before { create(:text_field, name: "nickname", entity_type: "Contact") }
 
     it "returns nil for non-existent field name" do
-      result = contact.set_typed_field_value("nonexistent", "value")
+      result = contact.set_typed_eav_value("nonexistent", "value")
       expect(result).to be_nil
     end
 
     it "updates an existing value" do
-      contact.set_typed_field_value("nickname", "Ace")
+      contact.set_typed_eav_value("nickname", "Ace")
       contact.save!
-      contact.set_typed_field_value("nickname", "Updated")
+      contact.set_typed_eav_value("nickname", "Updated")
       contact.save!
-      expect(contact.typed_field_value("nickname")).to eq("Updated")
+      expect(contact.typed_eav_value("nickname")).to eq("Updated")
     end
   end
 
@@ -331,7 +331,7 @@ RSpec.describe TypedEAV::HasTypedEAV, type: :model do
     it "destroys typed_values when entity is destroyed" do
       create(:text_field, name: "note", entity_type: "Contact")
       contact = create(:contact)
-      contact.set_typed_field_value("note", "test")
+      contact.set_typed_eav_value("note", "test")
       contact.save!
       expect { contact.destroy! }.to change(TypedEAV::Value, :count).by(-1)
     end

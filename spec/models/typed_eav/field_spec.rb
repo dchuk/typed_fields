@@ -151,7 +151,7 @@ RSpec.describe "Field type casting" do
   end
 
   describe TypedEAV::Field::Email do
-    let(:field) { build(:email_typed_field) }
+    let(:field) { build(:email_typed_eav) }
 
     it "downcases and strips" do
       expect(field.cast("  USER@Example.COM  ").first).to eq("user@example.com")
@@ -432,7 +432,7 @@ RSpec.describe "cast_value(nil) returns nil for all field types" do
   %i[text_field long_text_field integer_field decimal_field boolean_field
      date_field datetime_field select_field multi_select_field
      integer_array_field decimal_array_field text_array_field date_array_field
-     email_typed_field url_field color_field json_field].each do |factory_name|
+     email_typed_eav url_field color_field json_field].each do |factory_name|
     it "#{factory_name} returns nil" do
       field = build(factory_name)
       expect(field.cast(nil).first).to be_nil

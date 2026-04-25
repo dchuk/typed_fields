@@ -114,8 +114,8 @@ tags.field_options.create!([
 contact = Contact.new(name: "Darrin")
 
 # Individual assignment
-contact.set_typed_field_value("age", 40)
-contact.set_typed_field_value("status", "active")
+contact.set_typed_eav_value("age", 40)
+contact.set_typed_eav_value("status", "active")
 
 # Bulk assignment by field NAME (ergonomic for scripting / seeds)
 contact.typed_eav_attributes = [
@@ -134,8 +134,8 @@ contact.typed_values_attributes = [
 contact.save!
 
 # Reading
-contact.typed_field_value("age")    # => 40 (Ruby Integer)
-contact.typed_field_value("status") # => "active"
+contact.typed_eav_value("age")    # => 40 (Ruby Integer)
+contact.typed_eav_value("status") # => "active"
 contact.typed_eav_hash              # => { "age" => 40, "status" => "active", ... }
 ```
 
@@ -381,7 +381,7 @@ end
 
 ### Disabling enforcement for gradual adoption
 
-If your app has existing typed-field queries that don't yet pass scope, flip `require_scope` to `false` in the initializer. When no scope resolves, queries fall back to **global fields only** (definitions stored with `scope: nil`) instead of raising — they do **not** return all partitions' fields. Audit and fix callers, then flip back to `true`.
+If your app has existing typed-eav queries that don't yet pass scope, flip `require_scope` to `false` in the initializer. When no scope resolves, queries fall back to **global fields only** (definitions stored with `scope: nil`) instead of raising — they do **not** return all partitions' fields. Audit and fix callers, then flip back to `true`.
 
 To intentionally query across every partition (admin tools, migrations, cross-tenant audits), use the explicit escape hatch `TypedEAV.unscoped { ... }` rather than relying on `require_scope = false`.
 
@@ -473,7 +473,7 @@ A few non-obvious contracts worth knowing about up front:
 - **`Integer` array rejects fractional input**: `"1.9"` is rejected rather than truncated to `1`. Same rules as the scalar `Integer` field.
 - **`Json` parses string input**: a JSON string posted from a form is parsed; parse failures surface as `:invalid` rather than being stored as the literal string.
 - **`TextArray` does not support `:contains`**: it backs a jsonb column where SQL `LIKE` doesn't apply. Use `:any_eq` for "array contains element".
-- **Orphaned values are skipped**: if a field row is deleted while values remain, `typed_field_value` and `typed_eav_hash` silently skip the orphans rather than raising.
+- **Orphaned values are skipped**: if a field row is deleted while values remain, `typed_eav_value` and `typed_eav_hash` silently skip the orphans rather than raising.
 - **Cross-scope writes are rejected**: assigning a `Value` to a record whose `typed_eav_scope` doesn't match the field's `scope` adds a validation error on `:field`.
 
 ## Database Support

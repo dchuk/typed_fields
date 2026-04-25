@@ -227,7 +227,7 @@ module TypedEAV
       #   - omitted        → resolve from ambient (`with_scope` → resolver → raise/nil)
       #   - passed a value → use verbatim (explicit override; admin/test path)
       #   - passed nil     → filter to global-only fields (prior behavior preserved)
-      def typed_field_definitions(scope: UNSET_SCOPE)
+      def typed_eav_definitions(scope: UNSET_SCOPE)
         resolved = resolve_scope(scope)
         if resolved.equal?(ALL_SCOPES)
           TypedEAV::Field::Base.where(entity_type: name)
@@ -239,7 +239,7 @@ module TypedEAV
       private
 
       # Resolves the scope kwarg into a concrete value for field-definition
-      # lookup. See `typed_field_definitions` docs for kwarg semantics.
+      # lookup. See `typed_eav_definitions` docs for kwarg semantics.
       # Raises `TypedEAV::ScopeRequired` when the model declares
       # `scope_method:` but ambient scope can't be resolved and fail-closed
       # mode is enabled.
@@ -284,8 +284,8 @@ module TypedEAV
     # ──────────────────────────────────────────────────
     module InstanceMethods
       # The field definitions available for this record
-      def typed_field_definitions
-        self.class.typed_field_definitions(scope: typed_eav_scope)
+      def typed_eav_definitions
+        self.class.typed_eav_definitions(scope: typed_eav_scope)
       end
 
       # Current scope value (for multi-tenant)
@@ -395,7 +395,7 @@ module TypedEAV
       # row attached to a shadowed global field would surface here even
       # though writes route through the scoped winner.
       # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity -- name-collision precedence + orphan guard + already-loaded preload reuse.
-      def typed_field_value(name)
+      def typed_eav_value(name)
         winning = typed_eav_defs_by_name[name.to_s]
         # Skip orphans (`v.field` nil — definition deleted out from under the
         # value via raw SQL or a missing FK cascade) so a stray row can't
@@ -411,7 +411,7 @@ module TypedEAV
       # rubocop:enable Metrics/AbcSize, Metrics/PerceivedComplexity
 
       # Set a specific field's value by name
-      def set_typed_field_value(name, value)
+      def set_typed_eav_value(name, value)
         field = typed_eav_defs_by_name[name.to_s]
         return unless field
 
@@ -424,7 +424,7 @@ module TypedEAV
       end
 
       # Hash of all field values: { "field_name" => value, ... }. Same
-      # preload semantics as `typed_field_value` — respects already-loaded
+      # preload semantics as `typed_eav_value` — respects already-loaded
       # associations instead of rebuilding the relation.
       #
       # Collision-safe: on a global+scoped name overlap, the value attached
@@ -477,7 +477,7 @@ module TypedEAV
       # scoped definition wins. Delegates to `HasTypedEAV.definitions_by_name`
       # so the class-query path and the instance path share one source of truth.
       def typed_eav_defs_by_name
-        HasTypedEAV.definitions_by_name(typed_field_definitions)
+        HasTypedEAV.definitions_by_name(typed_eav_definitions)
       end
     end
   end

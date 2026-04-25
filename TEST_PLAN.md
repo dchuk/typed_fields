@@ -231,7 +231,7 @@ describe "cast_value(nil) returns nil for all field types"
   %i[text_field long_text_field integer_field decimal_field boolean_field
      date_field datetime_field select_field multi_select_field
      integer_array_field decimal_array_field text_array_field date_array_field
-     email_typed_field url_field color_field json_field].each do |factory|
+     email_typed_eav url_field color_field json_field].each do |factory|
     it "#{factory} returns nil for nil input"
       field = build(factory)
       expect(field.cast_value(nil)).to be_nil
@@ -635,13 +635,13 @@ describe TypedEAV::ColumnMapping do
 - [x] has_typed_eav adds typed_values association
 - [x] registers in global registry
 - [x] stores scope_method and type restrictions
-- [x] typed_field_definitions filters by entity_type
-- [x] typed_field_definitions includes scoped fields
+- [x] typed_eav_definitions filters by entity_type
+- [x] typed_eav_definitions includes scoped fields
 - [x] where_typed_eav: single field, multiple fields (AND), compact keys, default :eq, nonexistent field, chaining
 - [x] with_field: short form, full form
 - [x] initialize_typed_values: builds missing, no duplicates
 - [x] typed_eav_attributes=: create, update, ignore unknown
-- [x] typed_field_value / set_typed_field_value
+- [x] typed_eav_value / set_typed_eav_value
 - [x] typed_eav_hash
 - [x] scoping: includes global+scoped, excludes other tenant
 
@@ -663,7 +663,7 @@ describe "#typed_eav_attributes= with _destroy"
   it "destroys existing values when _destroy is truthy"
     contact.typed_eav_attributes = [{ name: "age", value: 30 }]
     contact.save!
-    expect(contact.typed_field_value("age")).to eq(30)
+    expect(contact.typed_eav_value("age")).to eq(30)
 
     contact.typed_eav_attributes = [{ name: "age", _destroy: true }]
     contact.save!
@@ -701,21 +701,21 @@ describe "#typed_eav_attributes= with Hash input"
       "1" => { name: "bio", value: "Hello" }
     }
     contact.save!
-    expect(contact.typed_field_value("age")).to eq(30)
+    expect(contact.typed_eav_value("age")).to eq(30)
 ```
 
-#### NEW — set_typed_field_value edge cases:
+#### NEW — set_typed_eav_value edge cases:
 ```
-describe "#set_typed_field_value"
+describe "#set_typed_eav_value"
   it "returns nil for non-existent field name"
-    expect(contact.set_typed_field_value("nonexistent", "value")).to be_nil
+    expect(contact.set_typed_eav_value("nonexistent", "value")).to be_nil
 
   it "updates an existing value"
-    contact.set_typed_field_value("nickname", "Ace")
+    contact.set_typed_eav_value("nickname", "Ace")
     contact.save!
-    contact.set_typed_field_value("nickname", "Updated")
+    contact.set_typed_eav_value("nickname", "Updated")
     contact.save!
-    expect(contact.typed_field_value("nickname")).to eq("Updated")
+    expect(contact.typed_eav_value("nickname")).to eq("Updated")
 ```
 
 #### NEW — initialize_typed_values with defaults:
@@ -733,7 +733,7 @@ describe "#initialize_typed_values with default values"
 ```
 describe "dependent: :destroy"
   it "destroys typed_values when entity is destroyed"
-    contact.set_typed_field_value("nickname", "test")
+    contact.set_typed_eav_value("nickname", "test")
     contact.save!
     expect { contact.destroy! }.to change(TypedEAV::Value, :count).by(-1)
 ```
@@ -820,7 +820,7 @@ describe "Full entity lifecycle"
     contact.save!
 
     # 3. Read back values
-    expect(contact.typed_field_value("age")).to eq(30)
+    expect(contact.typed_eav_value("age")).to eq(30)
     expect(contact.typed_eav_hash).to eq({ "age" => 30, "city" => "Portland" })
 
     # 4. Query
@@ -828,9 +828,9 @@ describe "Full entity lifecycle"
     expect(Contact.with_field("city", "Portland")).to include(contact)
 
     # 5. Update
-    contact.set_typed_field_value("age", 31)
+    contact.set_typed_eav_value("age", 31)
     contact.save!
-    expect(contact.typed_field_value("age")).to eq(31)
+    expect(contact.typed_eav_value("age")).to eq(31)
 
     # 6. Delete entity cascades
     expect { contact.destroy! }.to change(TypedEAV::Value, :count).by(-2)

@@ -4,7 +4,7 @@ require "spec_helper"
 
 # Regression: ambient scope leaked into models that never opted into scoping.
 #
-# Before the fix, `typed_field_definitions` on an un-scoped host (e.g. Product,
+# Before the fix, `typed_eav_definitions` on an un-scoped host (e.g. Product,
 # which declares `has_typed_eav` without `scope_method:`) would consult
 # `TypedEAV.current_scope` and, inside a `with_scope` block, return the
 # union of tenant-scoped fields + globals. That's wrong on two counts:
@@ -41,7 +41,7 @@ RSpec.describe "Round-2 review: ambient scope must not leak into un-scoped model
 
     it "ignores ambient scope: with_scope('tenant_a') still returns globals only" do
       TypedEAV.with_scope("tenant_a") do
-        fields = Product.typed_field_definitions
+        fields = Product.typed_eav_definitions
         expect(fields).to contain_exactly(product_global)
         expect(fields).not_to include(product_scoped_a)
         expect(fields).not_to include(product_scoped_b)
@@ -51,21 +51,21 @@ RSpec.describe "Round-2 review: ambient scope must not leak into un-scoped model
     it "still honors an explicit scope: kwarg override (admin/test path)" do
       # Explicit override must work even for un-scoped models: admin tools
       # may want to inspect a specific tenant's field set directly.
-      fields = Product.typed_field_definitions(scope: "tenant_a")
+      fields = Product.typed_eav_definitions(scope: "tenant_a")
       expect(fields).to include(product_scoped_a, product_global)
       expect(fields).not_to include(product_scoped_b)
     end
 
     it "explicit scope: nil still means global-only (unchanged)" do
       TypedEAV.with_scope("tenant_a") do
-        fields = Product.typed_field_definitions(scope: nil)
+        fields = Product.typed_eav_definitions(scope: nil)
         expect(fields).to contain_exactly(product_global)
       end
     end
 
     it "inside TypedEAV.unscoped { } returns fields across ALL scopes (unchanged)" do
       TypedEAV.unscoped do
-        fields = Product.typed_field_definitions
+        fields = Product.typed_eav_definitions
         expect(fields).to include(product_scoped_a, product_scoped_b, product_global)
       end
     end
@@ -74,14 +74,14 @@ RSpec.describe "Round-2 review: ambient scope must not leak into un-scoped model
       # Un-scoped hosts never fail-closed; the fail-closed gate is keyed on
       # `typed_eav_scope_method`.
       TypedEAV.config.require_scope = true
-      expect { Product.typed_field_definitions }.not_to raise_error
+      expect { Product.typed_eav_definitions }.not_to raise_error
     end
 
     it "ignores a configured ambient resolver too (not just with_scope)" do
       # The short-circuit sits before the ambient lookup, so a configured
       # resolver on an un-scoped host is equally inert.
       TypedEAV.config.scope_resolver = -> { "tenant_a" }
-      fields = Product.typed_field_definitions
+      fields = Product.typed_eav_definitions
       expect(fields).to contain_exactly(product_global)
     end
   end
@@ -99,7 +99,7 @@ RSpec.describe "Round-2 review: ambient scope must not leak into un-scoped model
 
     it "with_scope('tenant_a'): returns tenant_a + global (scoped models still honor ambient)" do
       TypedEAV.with_scope("tenant_a") do
-        fields = Contact.typed_field_definitions
+        fields = Contact.typed_eav_definitions
         expect(fields).to include(contact_scoped_a, contact_global)
         expect(fields).not_to include(contact_scoped_b)
       end
@@ -107,19 +107,19 @@ RSpec.describe "Round-2 review: ambient scope must not leak into un-scoped model
 
     it "no ambient + require_scope=true: raises ScopeRequired (fail-closed preserved)" do
       expect do
-        Contact.typed_field_definitions
+        Contact.typed_eav_definitions
       end.to raise_error(TypedEAV::ScopeRequired, /No ambient scope resolvable for Contact/)
     end
 
     it "no ambient + require_scope=false: returns globals only (unchanged)" do
       TypedEAV.config.require_scope = false
-      fields = Contact.typed_field_definitions
+      fields = Contact.typed_eav_definitions
       expect(fields).to contain_exactly(contact_global)
     end
 
     it "inside unscoped { }: returns fields across all scopes (unchanged)" do
       TypedEAV.unscoped do
-        fields = Contact.typed_field_definitions
+        fields = Contact.typed_eav_definitions
         expect(fields).to include(contact_scoped_a, contact_scoped_b, contact_global)
       end
     end

@@ -1,6 +1,6 @@
 <h1>New <%= @field.field_type_name.humanize %> Field</h1>
 
-<%= render_typed_field_form(field: @field) %>
+<%= render_typed_eav_form(field: @field) %>
 
 <div style="margin-top: 1rem;">
   <%= link_to "Back", typed_eav_fields_path %>

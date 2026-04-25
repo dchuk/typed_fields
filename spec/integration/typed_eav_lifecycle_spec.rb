@@ -18,8 +18,8 @@ RSpec.describe "TypedEAV full lifecycle", type: :model do
       contact.save!
 
       # 3. Read back values
-      expect(contact.typed_field_value("age")).to eq(30)
-      expect(contact.typed_field_value("city")).to eq("Portland")
+      expect(contact.typed_eav_value("age")).to eq(30)
+      expect(contact.typed_eav_value("city")).to eq("Portland")
       expect(contact.typed_eav_hash).to eq({ "age" => 30, "city" => "Portland" })
 
       # 4. Query
@@ -28,10 +28,10 @@ RSpec.describe "TypedEAV full lifecycle", type: :model do
       expect(Contact.with_field("age", :lt, 25)).not_to include(contact)
 
       # 5. Update
-      contact.set_typed_field_value("age", 31)
+      contact.set_typed_eav_value("age", 31)
       contact.save!
       contact.reload
-      expect(contact.typed_field_value("age")).to eq(31)
+      expect(contact.typed_eav_value("age")).to eq(31)
 
       # 6. Delete entity cascades to values
       value_count = contact.typed_values.count
@@ -105,7 +105,7 @@ RSpec.describe "TypedEAV full lifecycle", type: :model do
       tenant2 = create(:text_field, name: "team", entity_type: "Contact", scope: "t2")
 
       contact_t1 = create(:contact, tenant_id: "t1")
-      defs = contact_t1.typed_field_definitions
+      defs = contact_t1.typed_eav_definitions
 
       expect(defs).to include(global, tenant1)
       expect(defs).not_to include(tenant2)
@@ -124,8 +124,8 @@ RSpec.describe "TypedEAV full lifecycle", type: :model do
       ]
       product.save!
 
-      expect(product.typed_field_value("desc")).to eq("Widget")
-      expect(product.typed_field_value("qty")).to eq(10)
+      expect(product.typed_eav_value("desc")).to eq("Widget")
+      expect(product.typed_eav_value("qty")).to eq(10)
     end
   end
 

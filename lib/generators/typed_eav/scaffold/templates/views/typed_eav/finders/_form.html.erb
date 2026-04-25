@@ -1,5 +1,5 @@
 <%# Search/filter form for querying entities by typed field values.
-    Usage: render_typed_eav_search(fields: Contact.typed_field_definitions, url: contacts_path) %>
+    Usage: render_typed_eav_search(fields: Contact.typed_eav_definitions, url: contacts_path) %>
 
 <%= form_with url: url, method: :get, data: { turbo_frame: "_top" } do |f| %>
   <fieldset>
@@ -11,7 +11,7 @@
         <% field_name = filter_params[:n] || filter_params[:name] %>
         <% field = fields.find { |af| af.name == field_name } %>
         <% next unless field %>
-        <div class="typed-field-filter" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: end;">
+        <div class="typed-eav-filter" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: end;">
           <div>
             <label>Field</label>
             <select name="f[][n]">
@@ -29,7 +29,7 @@
               <% field.class.supported_operators.each do |op| %>
                 <option value="<%= op %>"
                   <%= "selected" if op.to_s == (filter_params[:op] || filter_params[:operator]).to_s %>>
-                  <%= typed_field_operator_label(op) %>
+                  <%= typed_eav_operator_label(op) %>
                 </option>
               <% end %>
             </select>
@@ -43,7 +43,7 @@
       <% end %>
 
       <%# Empty filter row for adding new filters %>
-      <div class="typed-field-filter" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: end;">
+      <div class="typed-eav-filter" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: end;">
         <div>
           <label>Field</label>
           <select name="f[][n]">

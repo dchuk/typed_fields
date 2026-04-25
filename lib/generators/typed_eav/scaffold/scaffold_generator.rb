@@ -68,7 +68,7 @@ module TypedEAV
         say "       scope_resolver pattern that matches your app (acts_as_tenant"
         say "       is auto-detected; no config needed if you use it)."
         say ""
-        say "  3. Include the concern in controllers that use typed-field",
+        say "  3. Include the concern in controllers that use typed-eav",
             :yellow
         say "     search params (your host model's controller, usually):",
             :yellow
@@ -97,7 +97,7 @@ module TypedEAV
         say "  5. Add a search form to filter entities by typed fields:",
             :yellow
         say ""
-        say "       <%= render_typed_eav_search(fields: Model.typed_field_definitions, url: search_path) %>"
+        say "       <%= render_typed_eav_search(fields: Model.typed_eav_definitions, url: search_path) %>"
         say ""
       end
     end

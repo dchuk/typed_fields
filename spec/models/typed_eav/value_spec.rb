@@ -161,7 +161,7 @@ RSpec.describe TypedEAV::Value, type: :model do
     end
 
     context "with an email field" do
-      let(:field) { create(:email_typed_field) }
+      let(:field) { create(:email_typed_eav) }
 
       it "downcases and strips whitespace" do
         value = described_class.create!(entity: contact, field: field)
@@ -445,7 +445,7 @@ RSpec.describe TypedEAV::Value, type: :model do
 
   describe "email format validation" do
     let(:contact) { create(:contact) }
-    let(:field) { create(:email_typed_field) }
+    let(:field) { create(:email_typed_eav) }
 
     it "rejects invalid email format" do
       value = described_class.new(entity: contact, field: field)

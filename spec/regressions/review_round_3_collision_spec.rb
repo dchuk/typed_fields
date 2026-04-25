@@ -119,7 +119,7 @@ RSpec.describe "Round-3 review: field-name collisions across scopes", :scoping d
       expect(status_rows.first.field_id).to eq(status_scoped.id)
     end
 
-    it "typed_field_value('status') returns the scoped value when both definitions exist" do
+    it "typed_eav_value('status') returns the scoped value when both definitions exist" do
       # Even if a stray value row attached to the global field somehow exists
       # on this record, the scoped winner's value must be the one returned.
       #
@@ -135,7 +135,7 @@ RSpec.describe "Round-3 review: field-name collisions across scopes", :scoping d
       TypedEAV::Value.create!(entity: contact, field: status_scoped, value: "scoped-wins")
 
       contact.reload
-      expect(contact.typed_field_value("status")).to eq("scoped-wins")
+      expect(contact.typed_eav_value("status")).to eq("scoped-wins")
     end
 
     it "typed_eav_hash prefers the scoped row when both exist on the same record" do
@@ -162,8 +162,8 @@ RSpec.describe "Round-3 review: field-name collisions across scopes", :scoping d
       contact.reload
 
       TypedEAV.with_scope("tenant_a") do
-        expect { contact.typed_field_value("orphaned_name") }.not_to raise_error
-        expect(contact.typed_field_value("orphaned_name")).to be_nil
+        expect { contact.typed_eav_value("orphaned_name") }.not_to raise_error
+        expect(contact.typed_eav_value("orphaned_name")).to be_nil
         expect { contact.typed_eav_hash }.not_to raise_error
         expect(contact.typed_eav_hash).not_to have_key("orphaned_name")
       end

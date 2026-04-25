@@ -164,14 +164,14 @@ RSpec.describe "TypedEAV scope enforcement", :scoping do
     end
   end
 
-  describe "typed_field_definitions scope behavior" do
+  describe "typed_eav_definitions scope behavior" do
     let!(:scoped_field) { create(:text_field, name: "foo", entity_type: "Contact", scope: "t1") }
     let!(:other_scoped) { create(:text_field, name: "bar", entity_type: "Contact", scope: "t2") }
     let!(:global_field) { create(:text_field, name: "baz", entity_type: "Contact", scope: nil) }
 
     it "filters to ambient scope + global when inside with_scope" do
       TypedEAV.with_scope("t1") do
-        fields = Contact.typed_field_definitions
+        fields = Contact.typed_eav_definitions
         expect(fields).to include(scoped_field, global_field)
         expect(fields).not_to include(other_scoped)
       end
@@ -179,14 +179,14 @@ RSpec.describe "TypedEAV scope enforcement", :scoping do
 
     it "returns fields from all partitions inside unscoped block" do
       TypedEAV.unscoped do
-        fields = Contact.typed_field_definitions
+        fields = Contact.typed_eav_definitions
         expect(fields).to include(scoped_field, other_scoped, global_field)
       end
     end
 
     it "explicit scope: nil kwarg still means global-only (prior behavior preserved)" do
       TypedEAV.with_scope("t1") do
-        fields = Contact.typed_field_definitions(scope: nil)
+        fields = Contact.typed_eav_definitions(scope: nil)
         expect(fields).to contain_exactly(global_field)
       end
     end
@@ -198,7 +198,7 @@ RSpec.describe "TypedEAV scope enforcement", :scoping do
 
     it "scoped field wins over global when both share a name" do
       contact = Contact.new(name: "Alice", tenant_id: "t1")
-      contact.set_typed_field_value("age", 30)
+      contact.set_typed_eav_value("age", 30)
       expect(contact.typed_values.first.field_id).to eq(scoped_field.id)
     end
 
@@ -210,7 +210,7 @@ RSpec.describe "TypedEAV scope enforcement", :scoping do
 
     it "falls back to the global field when no scoped field exists" do
       no_scope_contact = Contact.new(name: "Clara", tenant_id: "t2")
-      no_scope_contact.set_typed_field_value("age", 40)
+      no_scope_contact.set_typed_eav_value("age", 40)
       expect(no_scope_contact.typed_values.first.field_id).to eq(global_field.id)
     end
   end
@@ -220,7 +220,7 @@ RSpec.describe "TypedEAV scope enforcement", :scoping do
     # on the same entity_type, the scoped definition MUST win inside a
     # matching `with_scope` block. Previously, `where_typed_eav` and
     # `with_field` used a bare `.index_by(&:name)` on the result of
-    # `typed_field_definitions`, whose ordering is DB-dependent — the global
+    # `typed_eav_definitions`, whose ordering is DB-dependent — the global
     # could silently clobber the scoped definition. Mirrors the instance-side
     # guarantee in `InstanceMethods#typed_eav_defs_by_name`.
     #

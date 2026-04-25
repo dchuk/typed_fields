@@ -19,7 +19,7 @@ module TypedEAVHelper
     # without touching `v.field` (avoids per-value field load when typed_values
     # was preloaded but `:field` was not) AND to thread the resolved field
     # into `render_typed_value_input` so it doesn't re-trigger that lookup.
-    fields_by_id = record.typed_field_definitions.index_by(&:id)
+    fields_by_id = record.typed_eav_definitions.index_by(&:id)
 
     typed_values = record.initialize_typed_values.sort_by do |v|
       # Newly-built values may have field_id=nil but carry an in-memory
@@ -84,7 +84,7 @@ module TypedEAVHelper
   # ─── Field Management Form Rendering ─────────────────────────
 
   # Render the field definition form (for creating/editing field definitions).
-  def render_typed_field_form(field:)
+  def render_typed_eav_form(field:)
     partial = field_form_partial(field)
     render partial: partial, locals: { field: field }
   end
@@ -93,7 +93,7 @@ module TypedEAVHelper
 
   # Render a search form for filtering entities by typed fields.
   #
-  #   <%= render_typed_eav_search(fields: Contact.typed_field_definitions, url: contacts_path) %>
+  #   <%= render_typed_eav_search(fields: Contact.typed_eav_definitions, url: contacts_path) %>
   #
   def render_typed_eav_search(fields:, url:)
     render partial: "typed_eav/finders/form", locals: {
@@ -104,7 +104,7 @@ module TypedEAVHelper
 
   # ─── Operator Labels ────────────────────────────────────────
 
-  def typed_field_operator_label(operator)
+  def typed_eav_operator_label(operator)
     {
       eq: "equals",
       not_eq: "does not equal",
